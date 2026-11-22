@@ -1,0 +1,4 @@
+# Exclude source manual PDF and local editor/OS artifacts
+*.pdf
+.DS_Store
+Thumbs.db
