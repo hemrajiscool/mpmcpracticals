@@ -1,86 +1,103 @@
 # Practical 03 — Arithmetic Operations (8051)
 
-> **Aim:** Perform 8-bit addition, subtraction, multiplication, and division using the 8051 microcontroller instruction set.  
-> **Apparatus:** PC with Keil uVision / 8051 assembler *(software simulation — no external circuit diagram)*.
-
----
-
 ## Code
 
-### A. 8-Bit Addition
-
-Adds immediate values `20H` and `30H` and stores the sum in internal RAM `10H`.
+### A. Addition (`20H + 30H` → `10H`)
 
 ```asm
-ORG 0000H           ; Set program origin to 0000H
-MOV A, #20H         ; Load first 8-bit immediate value (20H) into A
-ADD A, #30H         ; Add second immediate value (30H) to A
-MOV 10H, A          ; Store sum at internal RAM location 10H
-HERE: SJMP HERE     ; Halt in an infinite loop
+ORG 0000H
+MOV A, #20H
+ADD A, #30H
+MOV 10H, A
+HERE: SJMP HERE
 END
 ```
 
-### B. 8-Bit Subtraction
-
-Subtracts `20H` from `30H` and stores the difference in internal RAM `10H`.
+### B. Subtraction (`30H - 20H` → `10H`)
 
 ```asm
-ORG 0000H           ; Set program origin to 0000H
-MOV A, #30H         ; Load minuend (30H) into A
-CLR C               ; Clear Carry/Borrow flag before subtraction
-SUBB A, #20H        ; Subtract 20H (and CY) from A
-MOV 10H, A          ; Store difference at internal RAM location 10H
-HERE: SJMP HERE     ; Halt in an infinite loop
+ORG 0000H
+MOV A, #30H
+CLR C
+SUBB A, #20H
+MOV 10H, A
+HERE: SJMP HERE
 END
 ```
 
-### C. 8-Bit Multiplication
-
-Multiplies `20H` and `30H`; stores low byte at `10H` and high byte at `11H`.
+### C. Multiplication (`20H × 30H` → Low at `10H`, High at `11H`)
 
 ```asm
-ORG 0000H           ; Set program origin to 0000H
-MOV A, #20H         ; Load first 8-bit operand (20H) into A
-MOV B, #30H         ; Load second 8-bit operand (30H) into B
-MUL AB              ; A * B -> Low byte in A, High byte in B
-MOV 10H, A          ; Store low byte of product at 10H
-MOV 11H, B          ; Store high byte of product at 11H
-HERE: SJMP HERE     ; Halt in an infinite loop
+ORG 0000H
+MOV A, #20H
+MOV B, #30H
+MUL AB
+MOV 10H, A
+MOV 11H, B
+HERE: SJMP HERE
 END
 ```
 
-### D. 8-Bit Division
-
-Divides `45H` by `20H`; stores quotient at `10H` and remainder at `11H`.
+### D. Division (`45H ÷ 20H` → Quotient at `10H`, Remainder at `11H`)
 
 ```asm
-ORG 0000H           ; Set program origin to 0000H
-MOV A, #45H         ; Load dividend (45H) into A
-MOV B, #20H         ; Load divisor (20H) into B
-DIV AB              ; A / B -> Quotient in A, Remainder in B
-MOV 10H, A          ; Store quotient at 10H
-MOV 11H, B          ; Store remainder at 11H
-HERE: SJMP HERE     ; Halt in an infinite loop
+ORG 0000H
+MOV A, #45H
+MOV B, #20H
+DIV AB
+MOV 10H, A
+MOV 11H, B
+HERE: SJMP HERE
 END
 ```
 
 ---
 
-## Write-Up & Sample Results
+## Write-Up
 
-### How It Works
-Unlike the 8085, the 8051 includes hardware instructions for unsigned 8-bit multiplication (`MUL AB`) and division (`DIV AB`) using the **Accumulator (`A`)** and **Register `B`**:
-- `ADD A, #data` adds an immediate byte to `A`.
-- `SUBB A, #data` subtracts both the operand and the Carry flag (`C`), so `CLR C` is executed first when no prior borrow exists.
-- `MUL AB` produces a 16-bit product (`A` = low byte, `B` = high byte).
-- `DIV AB` produces an integer quotient in `A` and remainder in `B`.
-- Because 8051 has no `HLT` instruction, `HERE: SJMP HERE` traps execution cleanly.
+**Aim:** To perform arithmetic operations like addition, subtraction, multiplication, and division using the 8051 microcontroller.
 
-### Sample Test Cases
+**Apparatus:** PC and Keil uVision IDE (8051 Assembler).
 
-| Operation | Inputs | Internal RAM Output |
+### Theory
+The 8051 executes 8-bit arithmetic via Accumulator `A` and Register `B` using `ADD`, `SUBB`, `MUL AB` (16-bit product), and `DIV AB` (quotient and remainder), storing results in internal RAM.
+
+### Steps
+1. Set program origin to `0000H` using `ORG 0000H`.
+2. Load immediate operands into `A` (and `B` for `MUL AB` / `DIV AB`); clear carry (`CLR C`) before `SUBB`.
+3. Execute the arithmetic instruction (`ADD`, `SUBB`, `MUL AB`, or `DIV AB`).
+4. Store the result from `A` into internal RAM `10H` (and high byte/remainder from `B` into `11H`).
+5. Halt execution with `HERE: SJMP HERE` and terminate with `END`.
+
+### Expected Results
+
+| Operation | Calculation | Internal RAM Output |
 | :--- | :--- | :--- |
-| Addition | `20H + 30H` | `(10H) = 50H` |
-| Subtraction | `30H - 20H` | `(10H) = 10H` |
-| Multiplication | `20H × 30H = 0600H` | `(10H) = 00H` (low byte), `(11H) = 06H` (high byte) |
-| Division | `45H / 20H` | `(10H) = 02H` (quotient), `(11H) = 05H` (remainder) |
+| Addition | `20H + 30H = 50H` | `I:0x10 = 50H` |
+| Subtraction | `30H - 20H = 10H` | `I:0x10 = 10H` |
+| Multiplication | `20H × 30H = 0600H` | `I:0x10 = 00H` (low), `I:0x11 = 06H` (high) |
+| Division | `45H ÷ 20H` | `I:0x10 = 02H` (quotient), `I:0x11 = 05H` (remainder) |
+
+### Conclusion
+8-bit addition, subtraction, multiplication, and division programs were assembled and verified in Keil uVision for the 8051 microcontroller.
+
+---
+
+## Software Operation Guide (Keil uVision)
+
+1. **Create Folder & Project:**
+   - Create a folder, e.g., `C:\MPMC\P03_Arithmetic\`.
+   - Open **Keil uVision** → **Project → New uVision Project** → save inside that folder as `add.uvproj` (or `sub`, `mul`, `div`).
+   - In **Select Device for Target**, choose **Atmel / Microchip → `AT89C51`** → click **OK**.
+   - When prompted *Copy STARTUP.A51 to Project Folder?*, click **No**.
+2. **Add Assembly Source File:**
+   - Click **File → New**, paste the program, and press **Ctrl+S** to save as `add.asm` inside `C:\MPMC\P03_Arithmetic\`.
+   - In the left **Project** pane, expand **Target 1**, right-click **Source Group 1 → Add Existing Files to Group 'Source Group 1'**.
+   - Change **Files of type** dropdown to **`Asm Source file (*.s*; *.src; *.a*)`**, select `add.asm`, click **Add**, then **Close**.
+3. **Build & Simulate:**
+   - Click **Project → Build Target** (`F7`) and verify `0 Error(s), 0 Warning(s)` in **Build Output**.
+   - Click **Debug → Start/Stop Debug Session** (`Ctrl+F5`) → click **OK** on the evaluation-mode popup.
+   - Click **Debug → Run** (`F5`) briefly, then **Debug → Stop** (`Esc`).
+4. **Verify Registers & Internal RAM:**
+   - Check `a`, `b`, and `psw` in the left **Registers** pane.
+   - Open **View → Memory Windows → Memory 1**, type **`I:0x00`** in the **Address** bar, and press **Enter** to inspect internal RAM bytes `0x10` and `0x11`.

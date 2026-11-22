@@ -1,101 +1,118 @@
 # Practical 02 — Arithmetic Operations & Data Movement (8085)
 
-> **Aim:** Perform 8-bit addition, subtraction, and memory data exchange using the 8085 microprocessor.  
-> **Apparatus:** PC with GNUSim8085 assembler/simulator *(software simulation — no external circuit diagram)*.
-
----
-
 ## Code
 
-### A1. 8-Bit Addition (Without Carry)
-
-Adds values at `2000H` and `2001H`, storing the sum at `2002H`.
+### A1. Addition Without Carry (`2000H` + `2001H` → `2002H`)
 
 ```asm
-LDA 2000H       ; Load first 8-bit number from 2000H into Accumulator (A)
-MOV B, A        ; Copy first number from A to Register B
-LDA 2001H       ; Load second 8-bit number from 2001H into A
-ADD B           ; A = A + B
-STA 2002H       ; Store sum at memory location 2002H
-HLT             ; Halt execution
+LDA 2000H
+MOV B, A
+LDA 2001H
+ADD B
+STA 2002H
+HLT
 ```
 
-### A2. 8-Bit Addition (With Carry)
-
-Adds values at `2050H` and `2051H`, storing the sum at `2052H` and carry at `2053H`.
+### A2. Addition With Carry (`2050H` + `2051H` → `2052H`, Carry → `2053H`)
 
 ```asm
-MVI C, 00H      ; Initialize Register C = 00H to track carry
-LDA 2050H       ; Load first 8-bit number from 2050H into A
-MOV B, A        ; Copy first number to Register B
-LDA 2051H       ; Load second 8-bit number from 2051H into A
-ADD B           ; A = A + B
-JNC STORE       ; If Carry Flag (CY) = 0, jump to STORE
-INR C           ; If CY = 1, increment carry register C
-STORE: STA 2052H ; Store 8-bit sum at 2052H
-MOV A, C        ; Move carry value into A
-STA 2053H       ; Store carry at 2053H
-HLT             ; Halt execution
+MVI C, 00H
+LDA 2050H
+MOV B, A
+LDA 2051H
+ADD B
+JNC STORE
+INR C
+STORE: STA 2052H
+MOV A, C
+STA 2053H
+HLT
 ```
 
-### B1. 8-Bit Subtraction (Without Borrow)
-
-Subtracts value at `2000H` from value at `2001H`, storing the difference at `2002H`.
+### B1. Subtraction Without Borrow (`2001H` - `2000H` → `2002H`)
 
 ```asm
-LDA 2000H       ; Load subtrahend from 2000H into A
-MOV B, A        ; Copy subtrahend to Register B
-LDA 2001H       ; Load minuend from 2001H into A
-SUB B           ; A = A - B
-STA 2002H       ; Store difference at memory location 2002H
-HLT             ; Halt execution
+LDA 2000H
+MOV B, A
+LDA 2001H
+SUB B
+STA 2002H
+HLT
 ```
 
-### B2. 8-Bit Subtraction (With Borrow)
-
-Subtracts value at `2050H` from value at `2051H`, storing the difference at `2052H` and borrow at `2053H`.
+### B2. Subtraction With Borrow (`2051H` - `2050H` → `2052H`, Borrow → `2053H`)
 
 ```asm
-MVI C, 00H      ; Initialize Register C = 00H to track borrow
-LDA 2050H       ; Load subtrahend from 2050H into A
-MOV B, A        ; Copy subtrahend to Register B
-LDA 2051H       ; Load minuend from 2051H into A
-SUB B           ; A = A - B (sets CY = 1 if borrow occurs)
-JNC STORE       ; If no borrow (CY = 0), jump to STORE
-INR C           ; If borrow occurred (CY = 1), increment C
-STORE: STA 2052H ; Store difference at 2052H
-MOV A, C        ; Move borrow flag into A
-STA 2053H       ; Store borrow at 2053H
-HLT             ; Halt execution
+MVI C, 00H
+LDA 2050H
+MOV B, A
+LDA 2051H
+SUB B
+JNC STORE
+INR C
+STORE: STA 2052H
+MOV A, C
+STA 2053H
+HLT
 ```
 
-### C. Movement / Exchange of Data
-
-Exchanges the contents of memory locations `1000H` and `2000H`.
+### C. Movement / Exchange of Data (`1000H` ↔ `2000H`)
 
 ```asm
-LDA 1000H       ; Load data from 1000H into A
-MOV B, A        ; Save (1000H) temporarily in Register B
-LDA 2000H       ; Load data from 2000H into A
-STA 1000H       ; Write (2000H) into 1000H
-MOV A, B        ; Retrieve original (1000H) from B into A
-STA 2000H       ; Write original (1000H) into 2000H
-HLT             ; Halt execution
+LDA 1000H
+MOV B, A
+LDA 2000H
+STA 1000H
+MOV A, B
+STA 2000H
+HLT
 ```
 
 ---
 
-## Write-Up & Sample Results
+## Write-Up
 
-### How It Works
-All 8085 arithmetic operations route through the 8-bit **Accumulator (`A`)** and ALU, updating status flags such as the **Carry Flag (`CY`)** on overflow (`ADD`) or borrow (`SUB`). Registers `B` and `C` act as temporary operands/carry counters, while `LDA` and `STA` transfer bytes directly between `A` and 16-bit memory addresses.
+**Aim:** To perform arithmetic operations like addition, subtraction, and movement of data using the 8085 microprocessor.
 
-### Sample Test Cases
+**Apparatus:** PC and GNUSim8085 Microprocessor Simulator.
 
-| Operation | Inputs | Expected Output |
+### Theory
+The 8085 ALU performs 8-bit arithmetic using the Accumulator (`A`) and registers (`B`, `C`), updating the Carry flag (`CY`) on overflow or borrow while transferring data via `LDA` and `STA`.
+
+### Steps
+1. Load the first 8-bit operand from memory into Accumulator `A` and copy it to register `B` (initialize `C = 00H` if tracking carry/borrow).
+2. Load the second 8-bit operand from memory into `A`.
+3. Execute `ADD B` or `SUB B`; if carry/borrow is checked, branch via `JNC STORE` and increment `C` when `CY = 1`.
+4. Store the result from `A` (and carry/borrow from `C`) into destination memory locations, then halt with `HLT`.
+5. For data exchange, buffer `(1000H)` in `B`, copy `(2000H)` to `1000H`, then store `B` into `2000H`.
+
+### Sample Inputs & Expected Results
+
+| Program | Input Memory (Hex / Dec) | Expected Output (Hex / Dec) |
 | :--- | :--- | :--- |
-| Addition (no carry) | `(2000H) = 80H`, `(2001H) = 15H` | `(2002H) = 95H` |
-| Addition (with carry) | `(2050H) = C2H`, `(2051H) = 4FH` | `(2052H) = 11H`, `(2053H) = 01H` |
-| Subtraction (no borrow) | `(2000H) = 15H`, `(2001H) = 80H` | `(2002H) = 6BH` |
-| Subtraction (with borrow) | `(2050H) = 45H`, `(2051H) = 15H` | `(2052H) = D0H` *(two's complement of `-30H`)*, `(2053H) = 01H` |
-| Data Exchange | `(1000H) = 15H`, `(2000H) = 45H` | `(1000H) = 45H`, `(2000H) = 15H` |
+| Add (no carry) | `2000H = 80H` (`128`), `2001H = 15H` (`21`) | `2002H = 95H` (`149`) |
+| Add (with carry) | `2050H = C2H` (`194`), `2051H = 4FH` (`79`) | `2052H = 11H` (`17`), `2053H = 01H` (`1`) |
+| Sub (no borrow) | `2000H = 15H` (`21`), `2001H = 80H` (`128`) | `2002H = 6BH` (`107`) |
+| Sub (with borrow) | `2050H = 45H` (`69`), `2051H = 15H` (`21`) | `2052H = D0H` (`208`), `2053H = 01H` (`1`) |
+| Data Exchange | `1000H = 15H` (`21`), `2000H = 45H` (`69`) | `1000H = 45H` (`69`), `2000H = 15H` (`21`) |
+
+### Conclusion
+Addition, subtraction (with and without carry/borrow), and memory data exchange were executed and verified on GNUSim8085.
+
+---
+
+## Software Operation Guide (GNUSim8085)
+
+1. **Create & Save File:**
+   - Open **GNUSim8085** and click **File → New**.
+   - Paste one program from the Code section above and save via **File → Save** (e.g., `C:\MPMC\P02_8085\add.asm`).
+2. **Load Input Data into Memory:**
+   - GNUSim8085 accepts memory addresses and data in **decimal**. Use the **Decimal - Hex Conversion** box on the bottom-left to convert hex to decimal (`2000H = 8192`, `2050H = 8272`, `1000H = 4096`).
+   - Open the **Memory** tab on the right panel, enter the decimal start address (e.g., `8192`) in **Start**, and click **OK**.
+   - In the bottom-left **Memory** box, enter the decimal address and decimal byte value, then click **Update Memory** for each input address.
+3. **Assemble & Run:**
+   - Click **Assembler → Assemble** (`F8`) and confirm `Program assembled successfully` in the bottom-right message panel.
+   - Click **Debug → Execute** (`F9`).
+4. **Verify Output:**
+   - Inspect **Registers** (`A`, `BC`) and **Flag** (`C` for carry/borrow) on the left panel, and read the stored result in the **Memory** tab on the right.
+   - Before running the next program, click **Reset → Reset All** (`Ctrl+R`).
